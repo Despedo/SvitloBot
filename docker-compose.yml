@@ -1,0 +1,9 @@
+version: '3'
+
+services:
+  app:
+    build:
+      context: https://github.com/Despedo/SvitloBot.git
+    ports:
+      - "8080:8080"  # Adjust the port as needed
+    restart: unless-stopped
