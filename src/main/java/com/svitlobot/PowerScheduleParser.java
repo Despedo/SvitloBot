@@ -6,14 +6,14 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.time.MonthDay;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
-@Service
+@Component
 public class PowerScheduleParser {
 
     public List<DaySchedule> parse(String body) {
@@ -25,46 +25,39 @@ public class PowerScheduleParser {
 
         int cellIndex = 0;
         for (Element dayHeader : dayHeaders) {
-            String dayText = dayHeader.text(); // напр. "чт 20.11"
+            String dayText = dayHeader.text();
             MonthDay date = parseDate(dayText);
-
             DaySchedule daySchedule = new DaySchedule();
-            daySchedule.date = date;
-            boolean hasSchedule = false;  // Flag to track if day has any disconnection
+            daySchedule.setDate(date);
+            boolean hasSchedule = false;
 
             for (int h = 0; h < 24; h++) {
                 Element cell = allCells.get(cellIndex++);
                 HalfHourStatus status = new HalfHourStatus();
 
-                // Перевіряємо, чи є клас "confirm_1 full_hour" у батьківського елемента
                 if (cell.hasClass("confirm_1") && cell.hasClass("full_hour")) {
-                    // Якщо так, встановлюємо CONFIRMED_DISCONNECTION для обох половин
-                    status.leftHalf = PowerState.CONFIRMED_DISCONNECTION;
-                    status.rightHalf = PowerState.CONFIRMED_DISCONNECTION;
+                    status.setLeftHalf(PowerState.CONFIRMED_DISCONNECTION);
+                    status.setRightHalf(PowerState.CONFIRMED_DISCONNECTION);
                     hasSchedule = true;
                 } else if (cell.hasClass("confirm_0") && cell.hasClass("full_hour")) {
-                    // Якщо є confirm_0 full_hour, встановлюємо POSSIBLE_DISCONNECTION для обох половин
-                    status.leftHalf = PowerState.POSSIBLE_DISCONNECTION;
-                    status.rightHalf = PowerState.POSSIBLE_DISCONNECTION;
+                    status.setLeftHalf(PowerState.POSSIBLE_DISCONNECTION);
+                    status.setRightHalf(PowerState.POSSIBLE_DISCONNECTION);
                     hasSchedule = true;
                 } else {
-                    // Обробляємо кожну половину години окремо
                     Elements halves = cell.select(".half");
-                    status.leftHalf = parseState(halves.get(0));
-                    status.rightHalf = parseState(halves.get(1));
+                    status.setLeftHalf(parseState(halves.get(0)));
+                    status.setRightHalf(parseState(halves.get(1)));
                 }
 
-                // Check if either half has a disconnection (confirmed or possible)
-                if (status.leftHalf == PowerState.CONFIRMED_DISCONNECTION ||
-                        status.leftHalf == PowerState.POSSIBLE_DISCONNECTION ||
-                        status.rightHalf == PowerState.CONFIRMED_DISCONNECTION ||
-                        status.rightHalf == PowerState.POSSIBLE_DISCONNECTION) {
+                if (status.getLeftHalf() == PowerState.CONFIRMED_DISCONNECTION ||
+                        status.getLeftHalf() == PowerState.POSSIBLE_DISCONNECTION ||
+                        status.getRightHalf() == PowerState.CONFIRMED_DISCONNECTION ||
+                        status.getRightHalf() == PowerState.POSSIBLE_DISCONNECTION) {
                     hasSchedule = true;
                 }
 
-                daySchedule.hours.add(status);
+                daySchedule.getHours().add(status);
             }
-            // Only add days that have a schedule
             if (hasSchedule) {
                 result.add(daySchedule);
             }
@@ -73,13 +66,10 @@ public class PowerScheduleParser {
     }
 
     private static MonthDay parseDate(String dayText) {
-        // dayText: "чт 20.11"
         String[] parts = dayText.split(" ");
         String datePart = parts[1];
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("d.M");
-        MonthDay monthDay = MonthDay.parse(datePart, fmt);
-        // Додаємо рік (наприклад, поточний)
-        return monthDay;
+        return MonthDay.parse(datePart, fmt);
     }
 
     private static PowerState parseState(Element half) {
@@ -89,6 +79,6 @@ public class PowerScheduleParser {
             return PowerState.CONFIRMED_DISCONNECTION;
         if (classAttr.contains("has_disconnection") && classAttr.contains("confirm_0"))
             return PowerState.POSSIBLE_DISCONNECTION;
-        return PowerState.NO_DISCONNECTION; // Замість null, повертаємо NO_DISCONNECTION за замовчуванням
+        return PowerState.NO_DISCONNECTION;
     }
 }
