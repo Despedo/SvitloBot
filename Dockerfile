@@ -28,4 +28,4 @@ WORKDIR /app
 COPY --from=build /app/build/libs/*.jar app.jar
 
 # Run the application
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-Duser.timezone=Europe/Kyiv", "-jar", "app.jar"]
