@@ -20,7 +20,7 @@ public class PowerScheduleMessageFormatter {
         LocalDate fullDate = daySchedule.date.atYear(currentYear);
 
         // Format the date as day.month (e.g., 20.11)
-        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd.MM", new Locale("uk"));
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd.MM", Locale.forLanguageTag("uk"));
         String formattedDate = fullDate.format(dateFormatter);
 
         StringBuilder message = new StringBuilder();
@@ -53,7 +53,7 @@ public class PowerScheduleMessageFormatter {
         LocalDate fullDate = daySchedule.date.atYear(currentYear);
 
         // Format the date as day.month (e.g., 20.11)
-        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd.MM", new Locale("uk"));
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd.MM", Locale.forLanguageTag("uk"));
         String formattedDate = fullDate.format(dateFormatter);
 
         StringBuilder message = new StringBuilder();

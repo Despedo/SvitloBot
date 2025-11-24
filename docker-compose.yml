@@ -2,8 +2,13 @@ version: '3'
 
 services:
   app:
-    build:
-      context: https://github.com/Despedo/SvitloBot.git
+    build: .
     ports:
-      - "8080:8080"  # Adjust the port as needed
+      - "8080:8080"  # Adjust the port as needed for your application
     restart: unless-stopped
+    environment:
+#      - SPRING_DATASOURCE_USERNAME=  # Optional: Set Spring profiles if needed
+#      - SPRING_DATASOURCE_PASSWORD=
+#      - TELEGRAM_BOT_TOKEN=
+#      - TELEGRAM_BOT_USERNAME=
+      - TELEGRAM_TEST=test
