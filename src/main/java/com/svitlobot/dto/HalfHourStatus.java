@@ -5,6 +5,6 @@ import lombok.Data;
 
 @Data
 public class HalfHourStatus {
-    public PowerState leftHalf;  // 00-29 хв
-    public PowerState rightHalf; // 30-59 хв
+    private PowerState leftHalf;
+    private PowerState rightHalf;
 }

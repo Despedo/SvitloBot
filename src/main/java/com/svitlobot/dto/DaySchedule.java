@@ -8,6 +8,6 @@ import java.util.List;
 
 @Data
 public class DaySchedule {
-    public MonthDay date;
-    public List<HalfHourStatus> hours = new ArrayList<>(); // 24 елементи (по годині)
+    private MonthDay date;
+    private List<HalfHourStatus> hours = new ArrayList<>();
 }

@@ -1,5 +1,6 @@
-package com.svitlobot;
+package com.svitlobot.service;
 
+import com.svitlobot.PowerScheduleParser;
 import com.svitlobot.dto.DaySchedule;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +23,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @AllArgsConstructor
 @Service
-public class PowerScheduleService {
+public class VoeService {
 
     private final PowerScheduleParser powerScheduleParser;
 
@@ -32,14 +33,14 @@ public class PowerScheduleService {
     public DaySchedule getTodaySchedule() {
         MonthDay monthDay = MonthDay.now();
         List<DaySchedule> daySchedules = fetchDisconnectionData();
-        return daySchedules.stream().filter(d -> d.date.equals(monthDay)).findFirst().orElse(null);
+        return daySchedules.stream().filter(d -> d.getDate().equals(monthDay)).findFirst().orElse(null);
     }
 
     public DaySchedule getTomorrowSchedule() {
         LocalDate tomorrow = LocalDate.now().plusDays(1);
         MonthDay monthDay = MonthDay.from(tomorrow);
         List<DaySchedule> daySchedules = fetchDisconnectionData();
-        return daySchedules.stream().filter(d -> d.date.equals(monthDay)).findFirst().orElse(null);
+        return daySchedules.stream().filter(d -> d.getDate().equals(monthDay)).findFirst().orElse(null);
     }
 
     public List<DaySchedule> fetchDisconnectionData() {

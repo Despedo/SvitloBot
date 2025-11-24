@@ -1,7 +1,10 @@
 package com.svitlobot;
 
 import com.svitlobot.dto.DaySchedule;
+import com.svitlobot.service.MessageFormatService;
 import com.svitlobot.service.SubscriberService;
+import com.svitlobot.service.VoeService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -16,31 +19,27 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import java.util.ArrayList;
 import java.util.List;
 
-
+@Slf4j
 @Component
 public class TelegramBot extends TelegramLongPollingBot {
 
     private final String botUsername;
-    private final PowerScheduleService powerScheduleService;
-    private final PowerScheduleMessageFormatter powerScheduleMessageFormatter;
-
-    // Store subscribed users
+    private final VoeService voeService;
+    private final MessageFormatService messageFormatService;
     private final SubscriberService subscriberService;
 
     @Autowired
     public TelegramBot(
             @Value("${telegram.bot.token}") String botToken,
             @Value("${telegram.bot.username}") String botUsername,
-            PowerScheduleService powerScheduleService,
-            PowerScheduleMessageFormatter powerScheduleMessageFormatter,
+            VoeService voeService,
+            MessageFormatService messageFormatService,
             SubscriberService subscriberService) {
         super(botToken);
         this.botUsername = botUsername;
-        this.powerScheduleService = powerScheduleService;
-        this.powerScheduleMessageFormatter = powerScheduleMessageFormatter;
+        this.voeService = voeService;
+        this.messageFormatService = messageFormatService;
         this.subscriberService = subscriberService;
-//        subscribedUsers.put(799021336L, true);
-//        subscribedUsers.put(1824310068L, true); me
     }
 
     @Override
@@ -71,7 +70,6 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
-        // Handle regular messages
         if (update.hasMessage() && update.getMessage().hasText()) {
             String messageText = update.getMessage().getText();
             long chatId = update.getMessage().getChatId();
@@ -82,24 +80,19 @@ public class TelegramBot extends TelegramLongPollingBot {
             if (messageText.startsWith("/")) {
                 handleCommands(messageText, chatId);
             }
-        }
-        // Handle callback queries (inline keyboard button clicks)
-        else if (update.hasCallbackQuery()) {
+        } else if (update.hasCallbackQuery()) {
             String callbackData = update.getCallbackQuery().getData();
             long chatId = update.getCallbackQuery().getMessage().getChatId();
-            int messageId = update.getCallbackQuery().getMessage().getMessageId();
             String callbackId = update.getCallbackQuery().getId();
 
-            // Answer the callback query to remove the loading indicator
             AnswerCallbackQuery answer = new AnswerCallbackQuery();
             answer.setCallbackQueryId(callbackId);
             try {
                 execute(answer);
             } catch (TelegramApiException e) {
-                e.printStackTrace();
+                log.error("Error while answering callback query: {}", e.getMessage());
             }
 
-            // Handle different button callbacks
             handleCommands(callbackData, chatId);
         }
     }
@@ -108,13 +101,10 @@ public class TelegramBot extends TelegramLongPollingBot {
     private void sendWelcomeMessage(long chatId) {
         String text = "Вітаю! Я бот для моніторингу графіку відключення електроенергії за адресою пров.Івана Миколайчука 6.";
 
-        // Create inline keyboard
         InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
 
-        // Create rows of buttons
         List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
 
-        // First row
         List<InlineKeyboardButton> row1 = new ArrayList<>();
         InlineKeyboardButton subscribeButton = InlineKeyboardButton.builder().text("📝 Підписатись").callbackData("/subscribe").build();
         InlineKeyboardButton unsubscribeButton = InlineKeyboardButton.builder().text("❌ Відписатись").callbackData("/unsubscribe").build();
@@ -122,7 +112,6 @@ public class TelegramBot extends TelegramLongPollingBot {
         row1.add(unsubscribeButton);
         rowsInline.add(row1);
 
-        // Second row
         List<InlineKeyboardButton> row2 = new ArrayList<>();
         InlineKeyboardButton todayShortButton = InlineKeyboardButton.builder().text("📅 Сьогодні").callbackData("/today").build();
         row2.add(todayShortButton);
@@ -130,28 +119,23 @@ public class TelegramBot extends TelegramLongPollingBot {
         row2.add(tomorrowShortButton);
         rowsInline.add(row2);
 
-        // Third row
         List<InlineKeyboardButton> row3 = new ArrayList<>();
         InlineKeyboardButton todayButton = InlineKeyboardButton.builder().text("📅 Сьогодні (повний графік)").callbackData("/today_full").build();
         row3.add(todayButton);
         rowsInline.add(row3);
 
-        // Fourth row
         List<InlineKeyboardButton> row4 = new ArrayList<>();
         InlineKeyboardButton tomorrowButton = InlineKeyboardButton.builder().text("📆 Завтра (повний графік)").callbackData("/tomorrow_full").build();
         row4.add(tomorrowButton);
         rowsInline.add(row4);
 
-        // Fifth row
         List<InlineKeyboardButton> row5 = new ArrayList<>();
         InlineKeyboardButton helpButton = InlineKeyboardButton.builder().text("❓ Допомога").callbackData("/help").build();
         row5.add(helpButton);
         rowsInline.add(row5);
 
-        // Add rows to keyboard
         inlineKeyboard.setKeyboard(rowsInline);
 
-        // Create message with keyboard
         SendMessage message = new SendMessage();
         message.setChatId(String.valueOf(chatId));
         message.setText(text);
@@ -176,9 +160,9 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     private void sendTodaySchedule(long chatId) {
         try {
-            DaySchedule todaySchedule = powerScheduleService.getTodaySchedule();
+            DaySchedule todaySchedule = voeService.getTodaySchedule();
             if (todaySchedule != null) {
-                String formattedMessage = powerScheduleMessageFormatter.prepareFullMessage(todaySchedule);
+                String formattedMessage = messageFormatService.prepareFullMessage(todaySchedule);
                 sendMessage(chatId, formattedMessage);
             } else {
                 sendMessage(chatId, "Немає інформації про графік відключень на сьогодні.");
@@ -188,11 +172,11 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
     }
 
-    private void sendTodayShortSchedule(long chatId) {
+    public void sendTodayShortSchedule(long chatId) {
         try {
-            DaySchedule todaySchedule = powerScheduleService.getTodaySchedule();
+            DaySchedule todaySchedule = voeService.getTodaySchedule();
             if (todaySchedule != null) {
-                String formattedMessage = powerScheduleMessageFormatter.prepareShortMessage(todaySchedule);
+                String formattedMessage = messageFormatService.prepareShortMessage(todaySchedule);
                 sendMessage(chatId, formattedMessage);
             } else {
                 sendMessage(chatId, "Немає інформації про графік відключень на сьогодні.");
@@ -201,13 +185,12 @@ public class TelegramBot extends TelegramLongPollingBot {
             sendMessage(chatId, "Помилка при отриманні графіку. Спробуйте пізніше.");
         }
     }
-
 
     private void sendTomorrowSchedule(long chatId) {
         try {
-            DaySchedule tomorrowSchedule = powerScheduleService.getTomorrowSchedule();
+            DaySchedule tomorrowSchedule = voeService.getTomorrowSchedule();
             if (tomorrowSchedule != null) {
-                String formattedMessage = powerScheduleMessageFormatter.prepareFullMessage(tomorrowSchedule);
+                String formattedMessage = messageFormatService.prepareFullMessage(tomorrowSchedule);
                 sendMessage(chatId, formattedMessage);
             } else {
                 sendMessage(chatId, "Немає інформації про графік відключень на завтра.");
@@ -219,9 +202,9 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     private void sendTomorrowShortSchedule(long chatId) {
         try {
-            DaySchedule todaySchedule = powerScheduleService.getTomorrowSchedule();
+            DaySchedule todaySchedule = voeService.getTomorrowSchedule();
             if (todaySchedule != null) {
-                String formattedMessage = powerScheduleMessageFormatter.prepareShortMessage(todaySchedule);
+                String formattedMessage = messageFormatService.prepareShortMessage(todaySchedule);
                 sendMessage(chatId, formattedMessage);
             } else {
                 sendMessage(chatId, "Немає інформації про графік відключень на завтра.");
@@ -252,8 +235,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         sendMessage(chatId, helpText);
     }
 
-
-    private void sendMessage(long chatId, String text) {
+    public void sendMessage(long chatId, String text) {
         SendMessage message = new SendMessage();
         message.setChatId(String.valueOf(chatId));
         message.setText(text);
@@ -261,7 +243,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         try {
             execute(message);
         } catch (TelegramApiException e) {
-            e.printStackTrace();
+            log.error("Unexpected error while sending message to user {}: {}", chatId, e.getMessage());
         }
     }
 
