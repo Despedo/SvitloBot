@@ -7,8 +7,7 @@ services:
       - "8080:8080"  # Adjust the port as needed for your application
     restart: unless-stopped
     environment:
-#      - SPRING_DATASOURCE_USERNAME=  # Optional: Set Spring profiles if needed
-#      - SPRING_DATASOURCE_PASSWORD=
-#      - TELEGRAM_BOT_TOKEN=
-#      - TELEGRAM_BOT_USERNAME=
-      - TELEGRAM_TEST=test
+      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
+      - TELEGRAM_BOT_TOKEN=${TG_BOT_TOKEN}
+      - TELEGRAM_BOT_USERNAME=${TG_BOT_USERNAME}
