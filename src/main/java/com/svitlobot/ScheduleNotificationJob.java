@@ -18,7 +18,7 @@ public class ScheduleNotificationJob {
     private final ScheduleStateService scheduleStateService;
     private final MessageFormatService messageFormatter;
 
-    @Scheduled(fixedRate = 60 * 10 * 1000)
+//    @Scheduled(fixedRate = 60 * 10 * 1000)
     public void sendDailyScheduleNotification() {
         DaySchedule todaySchedule = voeService.getTodaySchedule();
         ScheduleState lastState = scheduleStateService.getLastState();
