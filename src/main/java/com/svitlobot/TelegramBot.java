@@ -49,15 +49,16 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     private void handleCommands(String command, long chatId) {
         sendMessage(chatId, "Сервіс тимчасово не працює");
-//        if (command.startsWith("/start")) {
-//            sendWelcomeMessage(chatId);
-//        } else if (command.equalsIgnoreCase("/subscribe")) {
-//            subscribeUser(chatId);
-//        } else if (command.equalsIgnoreCase("/unsubscribe")) {
-//            unsubscribeUser(chatId);
-//        } else if (command.equalsIgnoreCase("/today_full")) {
-//            sendTodaySchedule(chatId);
-//        } else if (command.equalsIgnoreCase("/today")) {
+        if (command.startsWith("/start")) {
+            sendWelcomeMessage(chatId);
+        } else if (command.equalsIgnoreCase("/subscribe")) {
+            subscribeUser(chatId);
+        } else if (command.equalsIgnoreCase("/unsubscribe")) {
+            unsubscribeUser(chatId);
+        } else if (command.equalsIgnoreCase("/today_full")) {
+            sendTodaySchedule(chatId);
+        }
+//        else if (command.equalsIgnoreCase("/today")) {
 //            sendTodayShortSchedule(chatId);
 //        } else if (command.equalsIgnoreCase("/tomorrow_full")) {
 //            sendTomorrowSchedule(chatId);
