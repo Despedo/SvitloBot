@@ -57,15 +57,16 @@ public class TelegramBot extends TelegramLongPollingBot {
             unsubscribeUser(chatId);
         } else if (command.equalsIgnoreCase("/today_full")) {
             sendTodaySchedule(chatId);
-        } else if (command.equalsIgnoreCase("/today")) {
-            sendTodayShortSchedule(chatId);
-        } else if (command.equalsIgnoreCase("/tomorrow_full")) {
-            sendTomorrowSchedule(chatId);
-        } else if (command.equalsIgnoreCase("/tomorrow")) {
-            sendTomorrowShortSchedule(chatId);
-        } else if (command.equalsIgnoreCase("/help")) {
-            sendHelpMessage(chatId);
         }
+//        else if (command.equalsIgnoreCase("/today")) {
+//            sendTodayShortSchedule(chatId);
+//        } else if (command.equalsIgnoreCase("/tomorrow_full")) {
+//            sendTomorrowSchedule(chatId);
+//        } else if (command.equalsIgnoreCase("/tomorrow")) {
+//            sendTomorrowShortSchedule(chatId);
+//        } else if (command.equalsIgnoreCase("/help")) {
+//            sendHelpMessage(chatId);
+//        }
     }
 
 
